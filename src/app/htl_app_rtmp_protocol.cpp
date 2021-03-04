@@ -2061,6 +2061,7 @@ enum SrsCodecVideo
     SrsCodecVideoOn2VP6WithAlphaChannel = 5,
     SrsCodecVideoScreenVideoVersion2     = 6,
     SrsCodecVideoAVC                     = 7,
+    SrsCodecVideoHEVC                    = 12,
 };
 std::string srs_codec_video2str(SrsCodecVideo codec);
 
@@ -2170,6 +2171,10 @@ public:
     * check codec h264.
     */
     static bool video_is_h264(char* data, int size);
+    /**
+    * check codec h265.
+    */
+    static bool video_is_h265(char* data, int size);
     /**
     * check codec aac.
     */
@@ -14319,6 +14324,8 @@ string srs_codec_video2str(SrsCodecVideo codec)
     switch (codec) {
         case SrsCodecVideoAVC: 
             return "H264";
+        case SrsCodecVideoHEVC:
+            return "H265";
         case SrsCodecVideoOn2VP6:
         case SrsCodecVideoOn2VP6WithAlphaChannel:
             return "VP6";
@@ -14486,10 +14493,10 @@ bool SrsFlvCodec::video_is_keyframe(char* data, int size)
 bool SrsFlvCodec::video_is_sequence_header(char* data, int size)
 {
     // sequence header only for h264
-    if (!video_is_h264(data, size)) {
+    if (!video_is_h264(data, size) || !video_is_h265(data, size)) {
         return false;
     }
-    
+
     // 2bytes required.
     if (size < 2) {
         return false;
@@ -14532,6 +14539,19 @@ bool SrsFlvCodec::video_is_h264(char* data, int size)
     codec_id = codec_id & 0x0F;
     
     return codec_id == SrsCodecVideoAVC;
+}
+
+bool SrsFlvCodec::video_is_h265(char* data, int size)
+{
+    // 1bytes required.
+    if (size < 1) {
+        return false;
+    }
+
+    char codec_id = data[0];
+    codec_id = codec_id & 0x0F;
+
+    return codec_id == SrsCodecVideoHEVC;
 }
 
 bool SrsFlvCodec::audio_is_aac(char* data, int size)
